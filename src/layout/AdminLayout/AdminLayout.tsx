@@ -13,7 +13,7 @@ import type { MenuProps } from "antd";
 import { Layout, Menu, Button } from "antd";
 import { Outlet } from "react-router-dom";
 import styles from "./Layout.module.css";
-import { useToken } from "hooks/useToken";
+import { useToken } from "hooks";
 
 const { Header, Content, Sider } = Layout;
 
