@@ -1,0 +1,11 @@
+.header {
+  padding: 0;
+  background: purple;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: calc(
+    100% - 80px
+  ); /* or calc(100% - 200px) depending on the value of `collapsed` */
+  transition: all 0.1s ease-in-out;
+}
