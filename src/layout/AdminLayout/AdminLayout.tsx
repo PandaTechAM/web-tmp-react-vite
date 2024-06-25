@@ -14,6 +14,7 @@ import { Layout, Menu, Button } from "antd";
 import { Outlet } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useToken } from "hooks";
+import { useStyles } from "./useStyles";
 
 const { Header, Content, Sider } = Layout;
 
@@ -33,9 +34,9 @@ const items: MenuProps["items"] = [
 }));
 
 const AdminLayout: React.FC = () => {
-  const token = useToken();
+  const { fullHeight, colorWhite, borderRadiusLG, ...token } = useToken();
   const [collapsed, setCollapsed] = useState<boolean>(false);
-
+  const { siderStyles } = useStyles();
   return (
     <Layout hasSider>
       <Sider
@@ -43,15 +44,7 @@ const AdminLayout: React.FC = () => {
         collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
-        style={{
-          overflow: "auto",
-          height: token.fullHeight,
-          position: "fixed",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          background: token.colorWhite,
-        }}
+        style={siderStyles}
       >
         <div
           style={{
@@ -89,7 +82,7 @@ const AdminLayout: React.FC = () => {
               padding: 24,
               textAlign: "center",
               background: "lightgray",
-              borderRadius: token.borderRadiusLG,
+              borderRadius: borderRadiusLG,
             }}
           >
             <Button type="primary">
@@ -97,25 +90,6 @@ const AdminLayout: React.FC = () => {
             </Button>
             <Outlet />
           </div>
-          {/* <div
-            style={{
-              padding: 24,
-              textAlign: "center",
-              background: colorBgContainer,
-              borderRadius: borderRadiusLG,
-            }}
-          >
-            <p>long content</p>
-            {
-              // indicates very long content
-              Array.from({ length: 100 }, (_, index) => (
-                <React.Fragment key={index}>
-                  {index % 20 === 0 && index ? "more" : "..."}
-                  <br />
-                </React.Fragment>
-              ))
-            }
-          </div> */}
         </Content>
       </Layout>
     </Layout>

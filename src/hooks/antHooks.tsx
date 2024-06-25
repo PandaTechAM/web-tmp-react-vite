@@ -1,9 +1,6 @@
 import { theme } from "antd";
-import type { GlobalToken } from "antd";
-type Token = GlobalToken & {
-  fullHeight: string;
-};
-export const useToken = (): Token => {
+
+export const useToken = () => {
   const { token } = theme.useToken();
-  return token as Token;
+  return token;
 };
