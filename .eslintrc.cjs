@@ -29,6 +29,7 @@ module.exports = {
   ],
   rules: {
     "no-nested-ternary": "error",
+    "@typescript-eslint/no-explicit-any": "off",
     "react/jsx-uses-react": "off",
     "react/react-in-jsx-scope": "off",
     "react/display-name": "off",
@@ -36,7 +37,7 @@ module.exports = {
     "no-debugger": "warn",
     "react/jsx-uses-vars": "warn",
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/no-unused-vars": ["off", { argsIgnorePattern: "^_" }],
     "no-undef": "off",
     "react/no-children-prop": "off",
     "react-hooks/rules-of-hooks": "error",
@@ -49,6 +50,13 @@ module.exports = {
     "react-refresh/only-export-components": [
       "warn",
       { allowConstantExport: true },
+    ],
+    "import/no-cycle": [
+      "error",
+      {
+        maxDepth: 1,
+        ignoreExternal: true,
+      },
     ],
   },
   settings: {
