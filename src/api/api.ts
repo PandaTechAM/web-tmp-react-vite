@@ -2,68 +2,66 @@ import {
   createApi,
   fetchBaseQuery,
   type BaseQueryApi,
-} from "@reduxjs/toolkit/query/react";
-import { Mutex } from "async-mutex";
-import { BaseQueryExtraOptions, FetchArgs } from "types";
+  type FetchArgs,
+} from '@reduxjs/toolkit/query/react'
+import { Mutex } from 'async-mutex'
 
-interface ErrorData {
-  message?: string;
-}
-type Result = ReturnType<typeof baseQuery>;
+import type { BaseQueryExtraOptions } from 'types'
 
-const mutex = new Mutex();
+const mutex = new Mutex()
 
-const baseUrl = "https://api.example.com/";
+const baseUrl = import.meta.env.VITE_BASE_URL ?? 'https://api.example.com'
+
 export const baseQuery = fetchBaseQuery({
   baseUrl,
-  prepareHeaders: async (headers, { getState }) => {
-    const token = localStorage.getItem("token");
-
+  prepareHeaders: headers => {
+    const token = localStorage.getItem('token')
     if (token) {
-      headers.set("token", token);
+      headers.set('Authorization', `Bearer ${token}`)
     }
-
-    return headers;
+    return headers
   },
-});
+})
+
+type Result = Awaited<ReturnType<typeof baseQuery>>
 
 export const baseQueryWithReauth = async (
-  args: FetchArgs,
+  args: string | FetchArgs,
   api: BaseQueryApi,
   extraOptions: BaseQueryExtraOptions
-) => {
-  await mutex.waitForUnlock();
-  let result: Result = await baseQuery(args, api, extraOptions);
-
-  if (result?.error?.status === 500) {
-    console.log("error");
-  }
+): Promise<Result> => {
+  await mutex.waitForUnlock()
+  let result = await baseQuery(args, api, extraOptions)
 
   if (result.error && result.error.status === 401) {
     if (!mutex.isLocked()) {
-      const release = await mutex.acquire();
-
+      const release = await mutex.acquire()
       try {
-        const authResult = await baseQuery("/refreshToken", api, extraOptions);
-        if (authResult?.data) {
-          // retry the initial query
-          result = await baseQuery(args, api, extraOptions);
+        const refreshResult = await baseQuery(
+          '/auth/refresh',
+          api,
+          extraOptions
+        )
+        if (refreshResult.data) {
+          result = await baseQuery(args, api, extraOptions)
         } else {
-          console.log("redircet");
+          localStorage.removeItem('token')
         }
       } finally {
-        release();
+        release()
       }
     } else {
-      await mutex.waitForUnlock();
-      result = await baseQuery(args, api, extraOptions);
+      await mutex.waitForUnlock()
+      result = await baseQuery(args, api, extraOptions)
     }
   }
 
-  return result;
-};
+  return result
+}
+
 export const api = createApi({
-  reducerPath: "baseApi",
+  reducerPath: 'baseApi',
   baseQuery: baseQueryWithReauth,
+  tagTypes: [],
   endpoints: () => ({}),
-});
+})

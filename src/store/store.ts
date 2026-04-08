@@ -1,15 +1,20 @@
-import { configureStore } from "@reduxjs/toolkit";
-import { setupListeners } from "@reduxjs/toolkit/query/react";
+import { configureStore } from '@reduxjs/toolkit'
+import { setupListeners } from '@reduxjs/toolkit/query'
+
+import { api } from 'api/api'
 
 export const store = configureStore({
-  reducer: {},
-  middleware: (getDefaultMiddleware) =>
+  reducer: {
+    [api.reducerPath]: api.reducer,
+  },
+  middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
-  devTools: import.meta.env.VITE_NODE_ENV !== "production",
-});
-setupListeners(store.dispatch);
+    }).concat(api.middleware),
+  devTools: import.meta.env.MODE !== 'production',
+})
 
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+setupListeners(store.dispatch)
+
+export type RootState = ReturnType<typeof store.getState>
+export type AppDispatch = typeof store.dispatch

@@ -1,99 +1,94 @@
-import { defineConfig } from "vite";
-import fs from "fs";
-import react from "@vitejs/plugin-react-swc";
-import tsconfigPaths from "vite-tsconfig-paths";
-import checker from "vite-plugin-checker";
-import { chunkSplitPlugin } from "vite-plugin-chunk-split";
-const filterWarningsPlugin = () => {
-  return {
-    name: "filter-warnings",
-    handleHotUpdate({ file, server }: { file: string; server: any }) {
-      server.ws.send({
-        type: "custom",
-        event: "custom-error",
-        data: server.config.logger.info,
-      });
-    },
-    configureServer(server: any) {
-      const { ws } = server;
-      ws.on("vite:afterUpdate", (data: any) => {
-        data.updates.forEach((update: any) => {
-          if (update.type === "js-update") {
-            // Filter out warnings here if necessary
-          }
-        });
-      });
-    },
-  };
-};
+import react from '@vitejs/plugin-react'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { defineConfig } from 'vite'
+import checker from 'vite-plugin-checker'
 
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
+const certPath = resolve(__dirname, 'cert/pandatech.it+3.pem')
+const keyPath = resolve(__dirname, 'cert/pandatech.it+3-key.pem')
+const hasCerts = existsSync(certPath) && existsSync(keyPath)
+
+/**
+ * Auto-discovery of path aliases.
+ * Every top-level subfolder of `src/` becomes importable as `from 'foo'`.
+ * Add a matching entry in `tsconfig.app.json` paths so TS resolves it too.
+ */
+function getAliases() {
+  const srcPath = resolve(__dirname, 'src')
+  const entries = readdirSync(srcPath, { withFileTypes: true })
+
+  return entries
+    .filter(dirent => dirent.isDirectory())
+    .reduce<Record<string, string>>((acc, dirent) => {
+      acc[dirent.name] = resolve(srcPath, dirent.name)
+      return acc
+    }, {})
+}
+
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    tsconfigPaths(),
     checker({
       typescript: true,
       eslint: {
-        lintCommand: 'eslint "./src/**/*.{ts,tsx}"',
+        useFlatConfig: true,
+        lintCommand: 'eslint .',
       },
       overlay: {
-        initialIsOpen: "error",
-        position: "br",
-        badgeStyle: "",
-        panelStyle: "",
+        initialIsOpen: false,
       },
-    }),
-    filterWarningsPlugin(),
-    chunkSplitPlugin({
-      strategy: "single-vendor",
-      customChunk: (args) => {
-        // files into pages directory is export in single files
-        let { file } = args;
-        if (file.startsWith("src/pages/")) {
-          file = file.substring(4);
-          file = file.replace(/\.[^.$]+$/, "");
-          return file;
-        }
-        return null;
-      },
-      // customSplitting: {
-      //   // `react` and `react-dom` will be bundled together in the `react-vendor` chunk (with their dependencies, such as object-assign)
-      //   // Any file that includes `utils` in src dir will be bundled in the `utils` chunk
-
-      //   components: [/src\/components/],
-      //   features: [/src\/features/],
-      //   assets: [/src\/assets/],
-
-      //   router: [/src\/router/],
-      //   _constants: [/src\/_constants/],
-      //   hooks: [/src\/hooks/],
-      //   pages: [/src\/pages/],
-      //   layout: [/src\/layout/],
-      //   context: [/src\/context/],
-      //   'critical-dependencies': [/src\/store/, /src\/utils/, /src\/api/],
-      // },
     }),
   ],
-
-  server: {
-    https: {
-      key: fs.readFileSync("./cert/panda.key"),
-      cert: fs.readFileSync("./cert/panda.crt"),
-    },
-    host: "react.pandatech.it",
+  resolve: {
+    alias: getAliases(),
   },
+  server: hasCerts
+    ? {
+        https: {
+          key: readFileSync(keyPath),
+          cert: readFileSync(certPath),
+        },
+        host: 'react.pandatech.it',
+        port: 5173,
+        strictPort: true,
+      }
+    : {
+        port: 5173,
+        strictPort: true,
+      },
   build: {
+    target: 'es2022',
     sourcemap: true,
-    chunkSizeWarningLimit: 600,
+    cssCodeSplit: true,
+    // antd alone is ~600kB minified / ~200kB gzipped — bump above that.
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
+        // Explicit vendor splitting for long-term browser caching:
+        // when your code changes, vendor chunks stay cached.
         manualChunks(id) {
-          if (id.includes("node_modules")) {
-            // Split vendor modules into a separate chunk
-            return "vendor";
+          if (!id.includes('node_modules')) return
+          if (id.includes('/antd/') || id.includes('/@ant-design/') || id.includes('/rc-')) {
+            return 'antd-vendor'
           }
+          if (id.includes('/@reduxjs/') || id.includes('/react-redux/')) {
+            return 'redux-vendor'
+          }
+          if (
+            id.includes('/react-router') ||
+            id.includes('/react-dom/') ||
+            id.includes('/react/') ||
+            id.includes('/scheduler/')
+          ) {
+            return 'react-vendor'
+          }
+          return 'vendor'
         },
       },
     },
   },
-});
+})

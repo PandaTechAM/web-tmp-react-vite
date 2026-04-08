@@ -1,0 +1,102 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - development
+      - qa
+      - staging
+      - main
+
+env:
+  NEXUS_USERNAME: ${{ secrets.nexus_username }}
+  NEXUS_PASSWORD: ${{ secrets.nexus_password }}
+  DOCKER_REGISTRY: 192.168.68.13:443
+  DOCKER_IMAGE_PREFIX: 192.168.68.13:443/pandatech
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Configure environment
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "DOCKER_TAG=$(date +'%Y-%m-%d-%H-%M')-$GITHUB_RUN_NUMBER" >> $GITHUB_ENV
+
+          case "$BRANCH" in
+            development)
+              echo "VITE_BASE_URL=https://bedev.pandatech.it/api" >> $GITHUB_ENV
+              echo "DEPLOYMENT_ENV=dev" >> $GITHUB_ENV
+              echo "K8S_NAMESPACE=dev" >> $GITHUB_ENV
+              echo "K8S_DEPLOYMENT_FILE=kubernetes/deployment.yaml" >> $GITHUB_ENV
+              echo "K8S_IMAGE_HOST=repopanda.pandatech.it/pandatech/dev" >> $GITHUB_ENV
+              echo "RUN_KUBERNETES_APPLY=true" >> $GITHUB_ENV
+              ;;
+            qa)
+              echo "VITE_BASE_URL=https://qabedev.pandatech.it/api" >> $GITHUB_ENV
+              echo "DEPLOYMENT_ENV=qa" >> $GITHUB_ENV
+              echo "K8S_NAMESPACE=qa" >> $GITHUB_ENV
+              echo "K8S_DEPLOYMENT_FILE=kubernetes/deployment.yaml" >> $GITHUB_ENV
+              echo "K8S_IMAGE_HOST=repopanda.pandatech.it/pandatech/qa" >> $GITHUB_ENV
+              echo "RUN_KUBERNETES_APPLY=false" >> $GITHUB_ENV
+              ;;
+            staging)
+              echo "VITE_BASE_URL=https://stagingbedev.pandatech.it/api" >> $GITHUB_ENV
+              echo "DEPLOYMENT_ENV=staging" >> $GITHUB_ENV
+              echo "K8S_NAMESPACE=staging" >> $GITHUB_ENV
+              echo "K8S_DEPLOYMENT_FILE=kubernetes/deployment.yaml" >> $GITHUB_ENV
+              echo "K8S_IMAGE_HOST=repopanda.pandatech.it/pandatech/staging" >> $GITHUB_ENV
+              echo "RUN_KUBERNETES_APPLY=false" >> $GITHUB_ENV
+              ;;
+            main)
+              echo "VITE_BASE_URL=https://be.pandatech.it/api" >> $GITHUB_ENV
+              echo "DEPLOYMENT_ENV=prod" >> $GITHUB_ENV
+              echo "K8S_NAMESPACE=prod" >> $GITHUB_ENV
+              echo "K8S_DEPLOYMENT_FILE=kubernetes/proddeployment.yaml" >> $GITHUB_ENV
+              echo "K8S_IMAGE_HOST=${{ env.DOCKER_IMAGE_PREFIX }}/prod" >> $GITHUB_ENV
+              echo "RUN_KUBERNETES_APPLY=false" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - uses: actions/checkout@v6
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ env.NEXUS_USERNAME }}
+          password: ${{ env.NEXUS_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.DOCKER_IMAGE_PREFIX }}/${{ env.DEPLOYMENT_ENV }}/${{ github.event.repository.name }}:${{ env.DOCKER_TAG }}
+            ${{ env.DOCKER_IMAGE_PREFIX }}/${{ env.DEPLOYMENT_ENV }}/${{ github.event.repository.name }}:latest
+          build-args: |
+            VITE_BASE_URL=${{ env.VITE_BASE_URL }}
+
+      - name: Deploy to Kubernetes
+        if: env.RUN_KUBERNETES_APPLY == 'true'
+        run: |
+          export KUBECONFIG=/home/runner/.kube/config
+          sed -i "s|namespace: .*|namespace: ${{ env.K8S_NAMESPACE }}|g" ./${{ env.K8S_DEPLOYMENT_FILE }}
+          sed -i "s|\$(IMAGE_REFERENCE)|${{ env.K8S_IMAGE_HOST }}/${{ github.event.repository.name }}:${{ env.DOCKER_TAG }}|g" ./${{ env.K8S_DEPLOYMENT_FILE }}
+          kubectl apply -f ./${{ env.K8S_DEPLOYMENT_FILE }} -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Cleanup
+        if: always()
+        shell: bash
+        run: |
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          IMAGE_REF="${{ env.DOCKER_IMAGE_PREFIX }}/${{ env.DEPLOYMENT_ENV }}/${{ github.event.repository.name }}"
+          LATEST_IMAGE=$(docker images --format '{{.ID}}' --filter=reference="$IMAGE_REF" | head -n 1)
+          if [ -n "$LATEST_IMAGE" ]; then
+            docker images --format '{{.ID}}' --filter=reference="$IMAGE_REF" \
+              | grep -v "$LATEST_IMAGE" \
+              | xargs -r docker rmi -f 2>/dev/null || true
+          fi
+          docker builder prune -af 2>/dev/null || true

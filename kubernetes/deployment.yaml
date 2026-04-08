@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-vite-template
+  namespace: dev
+  labels:
+    app: react-vite-template
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: react-vite-template
+  template:
+    metadata:
+      labels:
+        app: react-vite-template
+    spec:
+      containers:
+        - name: react-vite-template
+          image: $(IMAGE_REFERENCE)
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      imagePullSecrets:
+        - name: nexus-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: react-vite-template
+  namespace: dev
+spec:
+  selector:
+    app: react-vite-template
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
