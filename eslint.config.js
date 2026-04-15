@@ -30,7 +30,9 @@ export default tseslint.config(
         version: 'detect',
       },
       'import-x/resolver-next': [
-        (await import('eslint-import-resolver-typescript')).createTypeScriptImportResolver({
+        (
+          await import('eslint-import-resolver-typescript')
+        ).createTypeScriptImportResolver({
           alwaysTryTypes: true,
           project: './tsconfig.app.json',
         }),
@@ -80,7 +82,9 @@ export default tseslint.config(
       'react-hooks/purity': 'off',
 
       // TypeScript
-      '@typescript-eslint/no-unused-vars': ['off', { argsIgnorePattern: '^_' }],
+      // no-unused-vars is left to TypeScript via tsconfig `noUnusedLocals` /
+      // `noUnusedParameters`; keeping ESLint off avoids duplicate diagnostics.
+      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
@@ -133,7 +137,8 @@ export default tseslint.config(
       quotes: ['error', 'single'],
       'jsx-quotes': ['error', 'prefer-double'],
 
-      // Prettier integration
+      // Prettier integration. Keep options aligned with .prettierrc so the
+      // CLI and ESLint never disagree (especially `endOfLine` on Windows).
       'prettier/prettier': [
         'error',
         {
@@ -145,6 +150,7 @@ export default tseslint.config(
           bracketSpacing: true,
           jsxSingleQuote: false,
           arrowParens: 'avoid',
+          endOfLine: 'auto',
         },
       ],
     },

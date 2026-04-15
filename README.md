@@ -20,38 +20,40 @@ A minimal but production-ready setup with the toolchain pinned to versions verif
 ## Pre-installed packages
 
 ### Production
-| Package | Why |
-|---|---|
-| `react`, `react-dom` | Core |
-| `react-router-dom` | Routing |
-| `@reduxjs/toolkit`, `react-redux` | State + RTK Query |
-| `antd`, `@ant-design/icons` | UI library |
-| `classnames` | Conditional class composition |
-| `dompurify` | Sanitizing HTML before `dangerouslySetInnerHTML` |
-| `async-mutex` | Used by the RTK Query reauth flow in `src/api/api.ts` |
+
+| Package                           | Why                                                   |
+| --------------------------------- | ----------------------------------------------------- |
+| `react`, `react-dom`              | Core                                                  |
+| `react-router-dom`                | Routing                                               |
+| `@reduxjs/toolkit`, `react-redux` | State + RTK Query                                     |
+| `antd`, `@ant-design/icons`       | UI library                                            |
+| `classnames`                      | Conditional class composition                         |
+| `dompurify`                       | Sanitizing HTML before `dangerouslySetInnerHTML`      |
+| `async-mutex`                     | Used by the RTK Query reauth flow in `src/api/api.ts` |
 
 ### Dev
-| Package | Why |
-|---|---|
-| `typescript`, `@types/*` | Type system |
+
+| Package                                               | Why                                   |
+| ----------------------------------------------------- | ------------------------------------- |
+| `typescript`, `@types/*`                              | Type system                           |
 | `vite`, `@vitejs/plugin-react`, `vite-plugin-checker` | Build + HMR + inline type/lint errors |
-| `eslint` family (9.x pinned), `prettier`, `globals` | Linting + formatting |
-| `postcss`, `autoprefixer` | CSS processing |
+| `eslint` family (9.x pinned), `prettier`, `globals`   | Linting + formatting                  |
+| `postcss`, `autoprefixer`                             | CSS processing                        |
 
 ## Common optional packages (NOT pre-installed)
 
 Add these only if your project actually needs them:
 
-| Package | Use case |
-|---|---|
-| `i18next`, `react-i18next`, `i18next-browser-languagedetector`, `i18next-http-backend` | Internationalization |
-| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers` | Drag and drop |
-| `lottie-react` | Lottie animations |
-| `@ant-design/charts` | Charts |
-| `react-quill-new` | Rich text editor (the React 19 compatible fork) |
-| `@microsoft/signalr` | SignalR client |
-| `vitest`, `@testing-library/react`, `@testing-library/jest-dom` | Unit testing |
-| `playwright` | E2E testing |
+| Package                                                                                | Use case                                        |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `i18next`, `react-i18next`, `i18next-browser-languagedetector`, `i18next-http-backend` | Internationalization                            |
+| `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/modifiers`                             | Drag and drop                                   |
+| `lottie-react`                                                                         | Lottie animations                               |
+| `@ant-design/charts`                                                                   | Charts                                          |
+| `react-quill-new`                                                                      | Rich text editor (the React 19 compatible fork) |
+| `@microsoft/signalr`                                                                   | SignalR client                                  |
+| `vitest`, `@testing-library/react`, `@testing-library/jest-dom`                        | Unit testing                                    |
+| `playwright`                                                                           | E2E testing                                     |
 
 ## Quick start
 
@@ -75,25 +77,25 @@ npm run dev
 
 ## Scripts
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Vite dev server. HTTPS on `react.pandatech.it:5173` if certs exist, plain HTTP otherwise |
-| `npm run build` | Type-check then bundle to `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm run lint` | Run ESLint on the whole tree |
-| `npm run lint:fix` | Run ESLint with `--fix` |
-| `npm run format` | Run Prettier across the tree |
-| `npm run format:check` | Verify Prettier formatting without writing |
-| `npm run type-check` | Run `tsc --noEmit` |
+| Command                | Purpose                                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run dev`          | Vite dev server. HTTPS on `react.pandatech.it:5173` if certs exist, plain HTTP otherwise |
+| `npm run build`        | Type-check then bundle to `dist/`                                                        |
+| `npm run preview`      | Serve the production build locally                                                       |
+| `npm run lint`         | Run ESLint on the whole tree                                                             |
+| `npm run lint:fix`     | Run ESLint with `--fix`                                                                  |
+| `npm run format`       | Run Prettier across the tree                                                             |
+| `npm run format:check` | Verify Prettier formatting without writing                                               |
+| `npm run type-check`   | Run `tsc --noEmit`                                                                       |
 
 ## Path aliases
 
 `vite.config.ts` auto-discovers every top-level subfolder of `src/` and exposes it as a bare import:
 
 ```ts
-import HomePage from 'pages/HomePage'      // src/pages/HomePage.tsx
-import { store } from 'store/store'        // src/store/store.ts
-import { antdTheme } from 'styles/theme'   // src/styles/theme.ts
+import HomePage from 'pages/HomePage' // src/pages/HomePage.tsx
+import { store } from 'store/store' // src/store/store.ts
+import { antdTheme } from 'styles/theme' // src/styles/theme.ts
 ```
 
 When you add a new top-level folder under `src/`, also add the matching entry in `tsconfig.app.json` `paths` so TypeScript resolves it. Pattern:

@@ -72,7 +72,11 @@ export default defineConfig({
         // when your code changes, vendor chunks stay cached.
         manualChunks(id) {
           if (!id.includes('node_modules')) return
-          if (id.includes('/antd/') || id.includes('/@ant-design/') || id.includes('/rc-')) {
+          if (
+            id.includes('/antd/') ||
+            id.includes('/@ant-design/') ||
+            id.includes('/rc-')
+          ) {
             return 'antd-vendor'
           }
           if (id.includes('/@reduxjs/') || id.includes('/react-redux/')) {

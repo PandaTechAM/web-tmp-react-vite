@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 
+import RouteErrorBoundary from 'components/RouteErrorBoundary'
 import AppLayout from 'layouts/AppLayout'
 
 import { RouterPaths } from './paths'
@@ -7,6 +8,7 @@ import { RouterPaths } from './paths'
 export const router = createBrowserRouter([
   {
     element: <AppLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: RouterPaths.Home,

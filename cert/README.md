@@ -12,6 +12,7 @@ The Vite config automatically enables HTTPS when the cert files exist in this di
 ### Installing mkcert
 
 **Windows** (using [Chocolatey](https://chocolatey.org/) or [Scoop](https://scoop.sh/)):
+
 ```bash
 choco install mkcert
 # or
@@ -19,6 +20,7 @@ scoop bucket add extras && scoop install mkcert
 ```
 
 **Linux (Ubuntu/Debian):**
+
 ```bash
 sudo apt install libnss3-tools
 curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
@@ -46,6 +48,7 @@ mkcert pandatech.it "*.pandatech.it" localhost 127.0.0.1
 ```
 
 This creates two files:
+
 - `pandatech.it+3.pem` — certificate
 - `pandatech.it+3-key.pem` — private key
 
@@ -60,6 +63,7 @@ Add this line to point `react.pandatech.it` to your local machine:
 **Windows:** Edit `C:\Windows\System32\drivers\etc\hosts` as Administrator, or run `set_pandatech_host.bat` as Administrator.
 
 **Linux:** Edit `/etc/hosts` with sudo:
+
 ```bash
 echo "127.0.0.1    react.pandatech.it" | sudo tee -a /etc/hosts
 ```

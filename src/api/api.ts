@@ -10,7 +10,12 @@ import type { BaseQueryExtraOptions } from 'types'
 
 const mutex = new Mutex()
 
-const baseUrl = import.meta.env.VITE_BASE_URL ?? 'https://api.example.com'
+const baseUrl = import.meta.env.VITE_BASE_URL
+if (!baseUrl) {
+  throw new Error(
+    'VITE_BASE_URL is not set. Add it to .env.local or the build args.'
+  )
+}
 
 export const baseQuery = fetchBaseQuery({
   baseUrl,

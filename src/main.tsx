@@ -1,4 +1,4 @@
-import { App as AntdApp, ConfigProvider } from 'antd'
+import { App as AntdApp, ConfigProvider, Spin } from 'antd'
 import { Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
@@ -16,11 +16,24 @@ if (!rootElement) {
   throw new Error('Root element #root not found in index.html')
 }
 
+const fallback = (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+    }}
+  >
+    <Spin size="large" />
+  </div>
+)
+
 createRoot(rootElement).render(
   <Provider store={store}>
     <ConfigProvider theme={antdTheme}>
       <AntdApp>
-        <Suspense fallback={null}>
+        <Suspense fallback={fallback}>
           <RouterProvider router={router} />
         </Suspense>
       </AntdApp>
