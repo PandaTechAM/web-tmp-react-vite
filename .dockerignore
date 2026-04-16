@@ -10,5 +10,8 @@ dist-ssr
 .playwright-mcp
 *.log
 .DS_Store
+.env*
+!.env.example
 *.local
 cert
+RECOMMENDED-CHANGES-FROM-CLAUDE.md

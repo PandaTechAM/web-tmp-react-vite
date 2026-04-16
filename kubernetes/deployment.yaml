@@ -30,16 +30,20 @@ spec:
               memory: 256Mi
           readinessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: 3000
-            initialDelaySeconds: 5
+            initialDelaySeconds: 3
             periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /
+              path: /healthz
               port: 3000
-            initialDelaySeconds: 15
+            initialDelaySeconds: 10
             periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
       imagePullSecrets:
         - name: nexus-registry
 ---
@@ -52,7 +56,8 @@ spec:
   selector:
     app: react-vite-template
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 3000
   type: ClusterIP
